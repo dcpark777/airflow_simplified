@@ -1,28 +1,54 @@
-# airflow_simplified
+# Airflow Simplified
 
-- Docker/Local Airflow server setup
-    - Use docker compose
-        - SQL Lite server
+Local Airflow development environment using Podman Compose.
 
-## Getting Started
-- Follow [these instructions](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html) to get Docker compose running
-    - `curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.5.3/docker-compose.yaml'`
+## Prerequisites
 
-- Run these commands before doing docker compose
-```
-mkdir -p ./dags ./logs ./plugins
-<!-- echo -e "AIRFLOW_UID=$(id -u)" > .env --> Only needed for Linux
-```
+- Podman installed and running
+- Podman machine with at least 4GB RAM (check with `make check-resources`)
 
-### Running Docker Compose
+## Quick Start
 
-1. Run database migrations and create user account
-`docker compose up airflow-init`
+1. **Initialize Airflow** (first time only):
 
-2. Run Airflow
-`docker compose up`
+   ```bash
+   make init
+   ```
 
-3. Loging via web UI at `http://localhost:8080` with username:password `airflow:airflow`
+2. **Start Airflow**:
 
-To clean up all containers and images:
-`docker compose down --volumes --rmi all`
+   ```bash
+   make run
+   ```
+
+3. **Access the web UI**:
+
+   - URL: <http://localhost:8080>
+   - Username: `airflow`
+   - Password: `airflow`
+
+## Available Commands
+
+Run `make` or `make help` to see all available commands:
+
+- `make run` - Start all containers
+- `make stop` - Stop containers
+- `make clean` - Stop and remove containers
+- `make logs` - View logs (use `LOGS_SERVICE=<name>` for specific service)
+- `make status` - Show container status
+- `make check-resources` - Check Podman machine resources
+- `make fix-resources` - Show instructions to increase memory
+
+## Directory Structure
+
+- `dags/` - Place your DAG files here
+- `logs/` - Airflow logs
+- `plugins/` - Airflow plugins
+
+## Troubleshooting
+
+If the webserver isn't responding:
+
+1. Check resources: `make check-resources`
+2. Increase memory if needed: `make fix-resources`
+3. Restart: `make restart`

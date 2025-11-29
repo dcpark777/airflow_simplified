@@ -71,26 +71,13 @@ test: ## Run Airflow tests (example - customize as needed)
 	@echo "$(GREEN)Tests complete.$(NC)"
 
 check-resources: ## Check Podman machine resources
-	@echo "$(BLUE)Checking Podman machine resources...$(NC)"
-	@echo ""
+	@echo "$(BLUE)Podman machine resources:$(NC)"
 	@podman machine list
-	@echo ""
-	@echo "$(YELLOW)Note: Airflow recommends at least 4GB RAM.$(NC)"
-	@echo "$(YELLOW)If you have less, the webserver workers may crash.$(NC)"
-	@echo "$(YELLOW)Run 'make fix-resources' for instructions to increase memory.$(NC)"
+	@echo "$(YELLOW)Note: Airflow requires at least 4GB RAM. Run 'make fix-resources' for help.$(NC)"
 
 fix-resources: ## Show instructions to increase Podman machine memory
-	@echo "$(BLUE)To increase Podman machine memory on macOS:$(NC)"
-	@echo ""
-	@echo "$(GREEN)1. Stop the current machine:$(NC)"
-	@echo "   podman machine stop"
-	@echo ""
-	@echo "$(GREEN)2. Set memory to 4GB (4096MB) or more:$(NC)"
-	@echo "   podman machine set --memory 4096"
-	@echo ""
-	@echo "$(GREEN)3. Start the machine:$(NC)"
-	@echo "   podman machine start"
-	@echo ""
-	@echo "$(YELLOW)Alternatively, the webserver is configured to use 2 workers$(NC)"
-	@echo "$(YELLOW)instead of 4 to reduce memory usage.$(NC)"
+	@echo "$(BLUE)Increase Podman machine memory:$(NC)"
+	@echo "  podman machine stop"
+	@echo "  podman machine set --memory 4096"
+	@echo "  podman machine start"
 
