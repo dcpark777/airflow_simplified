@@ -69,10 +69,14 @@ shell: ## Open an interactive shell in the Airflow CLI container
 	@echo "$(YELLOW)Opening Airflow CLI shell...$(NC)"
 	podman-compose run --rm airflow-cli bash
 
-test: ## Run all tests in container (unit tests and DAG import tests)
+test: ## Run all tests in container, then clean up test resources
 	@echo "$(YELLOW)Running all tests in container...$(NC)"
-	podman-compose --profile test run --rm test
-	@echo "$(GREEN)All tests complete.$(NC)"
+	@EXIT_CODE=0; \
+	podman-compose --profile test run --rm test || EXIT_CODE=$$?; \
+	echo "$(YELLOW)Cleaning up test containers and resources...$(NC)"; \
+	podman-compose --profile test down --volumes --remove-orphans 2>/dev/null || true; \
+	if [ $$EXIT_CODE -ne 0 ]; then exit $$EXIT_CODE; fi
+	@echo "$(GREEN)All tests complete. Test containers cleaned up.$(NC)"
 
 test-local: ## Run all tests locally (requires pytest installed)
 	@echo "$(YELLOW)Running all tests locally...$(NC)"
