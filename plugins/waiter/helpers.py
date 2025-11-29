@@ -6,7 +6,6 @@ import re
 
 from airflow import DAG
 from airflow.models import BaseOperator, DagBag
-from airflow.timetables.base import Timetable
 
 from waiter.operators import WaitForTaskOperator
 
@@ -27,7 +26,7 @@ class TaskReference:
 
     Example:
         ```python
-        from airflow_waiter.helpers import TaskReference
+        from waiter import TaskReference
 
         my_task_ref = TaskReference(dag_id='my_dag', task_id='my_task')
         wait_task = wait_for_task(task=my_task_ref)
@@ -254,8 +253,12 @@ def _calculate_execution_delta(
             return None, None
 
         # Support both 'schedule' (Airflow 3.0) and 'schedule_interval' (Airflow 2.x) attributes
-        current_schedule = getattr(current_dag, 'schedule', getattr(current_dag, 'schedule_interval', None))
-        external_schedule = getattr(external_dag, 'schedule', getattr(external_dag, 'schedule_interval', None))
+        def get_schedule(dag: DAG):
+            """Get schedule from DAG, supporting both Airflow 2.x and 3.x."""
+            return getattr(dag, 'schedule', getattr(dag, 'schedule_interval', None))
+        
+        current_schedule = get_schedule(current_dag)
+        external_schedule = get_schedule(external_dag)
 
         # If schedules are the same, no delta needed
         if current_schedule == external_schedule:

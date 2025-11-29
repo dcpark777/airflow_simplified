@@ -118,9 +118,7 @@ class TestDAGImports:
         for dag_id, dag in dag_bag.dags.items():
             # Schedule can be None (manual), timedelta, str (cron/preset), or timetable
             # Support both 'schedule' (Airflow 3.0) and 'schedule_interval' (Airflow 2.x) attributes
-            schedule = getattr(dag, 'schedule', getattr(dag, 'schedule_interval', None))
-            assert schedule is not None or schedule is None  # Just check it doesn't raise an error
-            # Check that at least one schedule attribute exists
+            # Just verify the schedule attribute exists and doesn't raise an error
             assert hasattr(dag, 'schedule') or hasattr(dag, 'schedule_interval')
 
     def test_waiter_plugin_importable(self):

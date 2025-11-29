@@ -4,13 +4,12 @@ This module provides a way to reference tasks from other DAGs in a convenient wa
 
 Example:
     ```python
-    from airflow_waiter.dag_loader import dags
+    from waiter import wait_for_task, dags
 
     # Reference a task from another DAG
     my_task = dags.my_dag.my_task_id
     
     # Use it with wait_for_task
-    from airflow_waiter import wait_for_task
     wait_task = wait_for_task(task=my_task)
     ```
 """
