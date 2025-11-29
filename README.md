@@ -44,6 +44,56 @@ Run `make` or `make help` to see all available commands:
 - `dags/` - Place your DAG files here
 - `logs/` - Airflow logs
 - `plugins/` - Airflow plugins
+- `tests/` - Test files for the project
+
+## Waiter Plugin
+
+This project includes a custom plugin for waiting on tasks from other DAGs.
+
+### Quick Example
+
+```python
+from waiter import wait_for_task, dags
+
+# Wait for a task from another DAG
+wait_task = wait_for_task(task=dags.my_dag.my_task_id)
+```
+
+See `plugins/waiter/README.md` for full documentation and `dags/example_wait_dag.py` for a complete example.
+
+## Testing
+
+Tests are dockerized and can be run in containers (recommended) or locally.
+
+### Dockerized Tests (Recommended)
+
+```bash
+# Run all tests in container
+make test
+
+# Run only unit tests
+make test-unit
+
+# Test DAG imports
+make test-dags
+
+# Build test container
+make test-build
+
+# Open shell in test container
+make test-shell
+```
+
+### Local Tests
+
+For local testing, install dependencies first:
+
+```bash
+pip install -r requirements-test.txt
+make test-local
+```
+
+The dockerized tests ensure a consistent environment and don't require local Python setup.
 
 ## Troubleshooting
 

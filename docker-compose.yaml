@@ -224,5 +224,23 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}:/app
+      - test-results:/app/test-results
+    environment:
+      PYTHONPATH: /app:/app/plugins
+      AIRFLOW_HOME: /app
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////tmp/test_airflow.db
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    profiles:
+      - test
+    # Command is handled by entrypoint script
+
 volumes:
   postgres-db-volume:
+  test-results:

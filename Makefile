@@ -1,7 +1,7 @@
 # Airflow Simplified - Makefile
 # This Makefile provides convenient commands to manage the Airflow Podman Compose setup
 
-.PHONY: help run stop clean restart logs status init shell test check-resources fix-resources
+.PHONY: help run stop clean restart logs status init shell test check-resources fix-resources test-unit test-dags
 
 # Default target
 .DEFAULT_GOAL := help
@@ -42,12 +42,16 @@ restart: ## Restart all containers
 
 clean: ## Stop and remove containers, networks, and volumes
 	@echo "$(YELLOW)Cleaning up Airflow containers and resources...$(NC)"
-	podman-compose down
+	@podman-compose stop 2>/dev/null || true
+	@podman pod stop pod_airflow_simplified 2>/dev/null || true
+	@podman-compose down --remove-orphans 2>/dev/null || true
 	@echo "$(GREEN)Cleanup complete.$(NC)"
 
 clean-all: ## Stop and remove containers, networks, volumes, and images
 	@echo "$(YELLOW)Performing full cleanup (containers, networks, volumes, and images)...$(NC)"
-	podman-compose down --volumes --rmi all
+	@podman-compose stop 2>/dev/null || true
+	@podman pod stop pod_airflow_simplified 2>/dev/null || true
+	@podman-compose down --volumes --rmi all --remove-orphans 2>/dev/null || true
 	@echo "$(GREEN)Full cleanup complete.$(NC)"
 
 logs: ## View logs from all containers (use LOGS_SERVICE=<service> for specific service)
@@ -65,10 +69,39 @@ shell: ## Open an interactive shell in the Airflow CLI container
 	@echo "$(YELLOW)Opening Airflow CLI shell...$(NC)"
 	podman-compose run --rm airflow-cli bash
 
-test: ## Run Airflow tests (example - customize as needed)
-	@echo "$(YELLOW)Running Airflow tests...$(NC)"
+test: ## Run all tests in container (unit tests and DAG import tests)
+	@echo "$(YELLOW)Running all tests in container...$(NC)"
+	podman-compose --profile test run --rm test
+	@echo "$(GREEN)All tests complete.$(NC)"
+
+test-local: ## Run all tests locally (requires pytest installed)
+	@echo "$(YELLOW)Running all tests locally...$(NC)"
+	pytest tests/ -v
+	@echo "$(GREEN)All tests complete.$(NC)"
+
+test-unit: ## Run unit tests for waiter plugin in container
+	@echo "$(YELLOW)Running unit tests in container...$(NC)"
+	podman-compose --profile test run --rm test pytest tests/test_waiter_*.py -v
+	@echo "$(GREEN)Unit tests complete.$(NC)"
+
+test-dags: ## Test DAG imports and structure in container
+	@echo "$(YELLOW)Testing DAG imports in container...$(NC)"
+	podman-compose --profile test run --rm test pytest tests/test_dag_imports.py -v
+	@echo "$(GREEN)DAG import tests complete.$(NC)"
+
+test-build: ## Build the test container image
+	@echo "$(YELLOW)Building test container...$(NC)"
+	podman-compose --profile test build test
+	@echo "$(GREEN)Test container built.$(NC)"
+
+test-shell: ## Open a shell in the test container
+	@echo "$(YELLOW)Opening test container shell...$(NC)"
+	podman-compose --profile test run --rm test bash
+
+test-airflow: ## Run Airflow CLI tests (list DAGs)
+	@echo "$(YELLOW)Running Airflow CLI tests...$(NC)"
 	podman-compose run --rm airflow-cli airflow dags list
-	@echo "$(GREEN)Tests complete.$(NC)"
+	@echo "$(GREEN)Airflow CLI tests complete.$(NC)"
 
 check-resources: ## Check Podman machine resources
 	@echo "$(BLUE)Podman machine resources:$(NC)"
