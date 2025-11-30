@@ -82,17 +82,13 @@ def create_dag_file(
     dag_id = f"{tenant}_{dag_name}"
     
     # Set defaults
-    if description is None:
-        description = f"DAG for {dag_name}"
-    if owner is None:
-        owner = tenant
+    description = description or f"DAG for {dag_name}"
+    owner = owner or tenant
+    
+    # Format schedule
     if schedule is None:
         schedule = "None  # Manual trigger only"
-    elif schedule.startswith("'") or schedule.startswith('"'):
-        # Already quoted
-        pass
-    else:
-        # Quote the schedule
+    elif not (schedule.startswith("'") or schedule.startswith('"')):
         schedule = f"'{schedule}'"
     
     # Calculate start date (today)
