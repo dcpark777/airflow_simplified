@@ -131,6 +131,41 @@ class TestDAGImports:
         except ImportError as e:
             pytest.fail(f"Failed to import waiter plugin: {e}")
 
+    def test_sensors_plugin_importable(self):
+        """Test that sensors plugin can be imported (same way DAGs import it)."""
+        try:
+            from sensors import SqlSensor
+            assert SqlSensor is not None
+        except ImportError as e:
+            pytest.fail(f"Failed to import sensors plugin: {e}")
+
+    def test_sensors_plugin_importable_from_init(self):
+        """Test that sensors plugin __init__.py can be imported without errors.
+        
+        This test simulates how Airflow loads plugins and catches relative import issues.
+        """
+        import sys
+        from pathlib import Path
+        
+        # Add plugins to path the way Airflow does
+        plugins_dir = Path(__file__).parent.parent / 'plugins'
+        if str(plugins_dir) not in sys.path:
+            sys.path.insert(0, str(plugins_dir))
+        
+        # Try importing the __init__.py module directly
+        # This will fail if there are relative import issues
+        try:
+            import importlib.util
+            init_file = plugins_dir / 'sensors' / '__init__.py'
+            spec = importlib.util.spec_from_file_location("sensors", init_file)
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                # If we get here, the import worked
+                assert hasattr(module, 'SqlSensor')
+        except Exception as e:
+            pytest.fail(f"Failed to import sensors/__init__.py (plugin loading issue): {e}")
+
     def test_dag_dependencies_valid(self, dag_bag):
         """Test that DAG task dependencies are valid."""
         for dag_id, dag in dag_bag.dags.items():
