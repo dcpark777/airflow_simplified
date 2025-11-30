@@ -14,9 +14,14 @@ from airflow.models import DagBag
 
 
 def get_dag_files():
-    """Get all DAG files from the dags directory."""
+    """Get all DAG files from the dags directory and examples subdirectory."""
     dags_dir = Path(__file__).parent.parent / 'dags'
-    return list(dags_dir.glob('*.py'))
+    # Get DAGs from main dags directory
+    main_dags = list(dags_dir.glob('*.py'))
+    # Get DAGs from examples directory
+    examples_dir = dags_dir / 'examples'
+    example_dags = list(examples_dir.glob('*.py')) if examples_dir.exists() else []
+    return main_dags + example_dags
 
 
 class TestDAGImports:
@@ -24,14 +29,32 @@ class TestDAGImports:
 
     @pytest.fixture(scope="class")
     def dag_bag(self):
-        """Create a DagBag for testing (class-scoped to avoid recreating)."""
+        """Create a DagBag for testing (class-scoped to avoid recreating).
+        
+        Note: For testing, we load DAGs from the examples directory explicitly
+        since .airflowignore prevents them from loading in production.
+        """
         dags_dir = Path(__file__).parent.parent / 'dags'
-        # Create DagBag - it will load DAGs from the folder
-        # The database should already be initialized by the entrypoint script
+        examples_dir = dags_dir / 'examples'
+        
+        # Create DagBag - load from both main dags directory and examples
+        # We need to load examples explicitly since .airflowignore excludes them
+        # For testing purposes, we'll load from examples directory directly
         bag = DagBag(
-            dag_folder=str(dags_dir),
+            dag_folder=str(examples_dir) if examples_dir.exists() else str(dags_dir),
             include_examples=False,
         )
+        
+        # Also load any DAGs from the main dags directory (if any exist)
+        if dags_dir.exists():
+            main_bag = DagBag(
+                dag_folder=str(dags_dir),
+                include_examples=False,
+            )
+            # Merge DAGs from main directory into our bag
+            bag.dags.update(main_bag.dags)
+            bag.import_errors.update(main_bag.import_errors)
+        
         return bag
 
     def test_all_dag_files_exist(self):
@@ -39,10 +62,11 @@ class TestDAGImports:
         dag_files = get_dag_files()
         assert len(dag_files) > 0, "No DAG files found"
         
-        # Check for expected DAG files
+        # Check for expected DAG files (now in examples directory)
         dag_names = [f.stem for f in dag_files]
-        assert 'simple_dag' in dag_names, "simple_dag.py not found"
-        assert 'example_wait_dag' in dag_names, "example_wait_dag.py not found"
+        assert 'simple_dag' in dag_names, "simple_dag.py not found in dags/examples/"
+        assert 'example_wait_dag' in dag_names, "example_wait_dag.py not found in dags/examples/"
+        assert 'example_sql_sensor_dag' in dag_names, "example_sql_sensor_dag.py not found in dags/examples/"
 
     def test_dag_bag_imports_no_errors(self, dag_bag):
         """Test that DagBag can import all DAGs without errors."""

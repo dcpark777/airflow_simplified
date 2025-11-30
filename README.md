@@ -42,6 +42,7 @@ Run `make` or `make help` to see all available commands:
 ## Directory Structure
 
 - `dags/` - Place your DAG files here
+  - `dags/examples/` - Example DAGs (disabled by default via `.airflowignore`)
 - `logs/` - Airflow logs
 - `plugins/` - Airflow plugins
 - `tests/` - Test files for the project
@@ -59,7 +60,9 @@ from waiter import wait_for_task, dags
 wait_task = wait_for_task(task=dags.my_dag.my_task_id)
 ```
 
-See `plugins/waiter/README.md` for full documentation and `dags/example_wait_dag.py` for a complete example.
+See `plugins/waiter/README.md` for full documentation and `dags/examples/example_wait_dag.py` for a complete example.
+
+**Note:** Example DAGs are in the `dags/examples/` directory and are disabled by default. See `dags/examples/README.md` for instructions on enabling them.
 
 ## Testing
 
