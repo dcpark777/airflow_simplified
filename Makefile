@@ -1,7 +1,7 @@
 # Airflow Simplified - Makefile
 # This Makefile provides convenient commands to manage the Airflow Podman Compose setup
 
-.PHONY: help run stop clean restart logs status init shell test check-resources fix-resources test-unit test-dags
+.PHONY: help run stop clean restart logs status init shell test check-resources fix-resources test-unit test-dags validate-dags check-naming check-resources install-precommit
 
 # Default target
 .DEFAULT_GOAL := help
@@ -93,6 +93,11 @@ test-dags: ## Test DAG imports and structure in container
 	podman-compose --profile test run --rm test pytest tests/test_dag_imports.py -v
 	@echo "$(GREEN)DAG import tests complete.$(NC)"
 
+test-dag-best-practices: ## Test DAG best practices in container
+	@echo "$(YELLOW)Testing DAG best practices in container...$(NC)"
+	podman-compose --profile test run --rm test pytest tests/test_dag_best_practices.py -v
+	@echo "$(GREEN)DAG best practices tests complete.$(NC)"
+
 test-build: ## Build the test container image
 	@echo "$(YELLOW)Building test container...$(NC)"
 	podman-compose --profile test build test
@@ -117,4 +122,25 @@ fix-resources: ## Show instructions to increase Podman machine memory
 	@echo "  podman machine stop"
 	@echo "  podman machine set --memory 4096"
 	@echo "  podman machine start"
+
+validate-dags: ## Validate DAG syntax and imports
+	@echo "$(YELLOW)Validating DAGs...$(NC)"
+	@python scripts/validate_dags.py
+	@echo "$(GREEN)DAG validation complete.$(NC)"
+
+check-naming: ## Check DAG naming conventions
+	@echo "$(YELLOW)Checking DAG naming conventions...$(NC)"
+	@python scripts/check_dag_naming.py
+	@echo "$(GREEN)Naming check complete.$(NC)"
+
+check-resources: ## Check DAG resource limits
+	@echo "$(YELLOW)Checking DAG resource limits...$(NC)"
+	@python scripts/check_dag_resources.py
+	@echo "$(GREEN)Resource check complete.$(NC)"
+
+install-precommit: ## Install pre-commit hooks
+	@echo "$(YELLOW)Installing pre-commit hooks...$(NC)"
+	@pip install pre-commit || echo "$(YELLOW)Warning: pip install pre-commit failed. Install manually: pip install pre-commit$(NC)"
+	@pre-commit install || echo "$(YELLOW)Warning: pre-commit install failed$(NC)"
+	@echo "$(GREEN)Pre-commit hooks installed.$(NC)"
 
